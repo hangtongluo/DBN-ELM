@@ -1,0 +1,91 @@
+% Version 1.000
+%
+% Code provided by Ruslan Salakhutdinov and Geoff Hinton
+%
+% Permission is granted for anyone to copy, use, modify, or distribute this
+% program and accompanying programs and documents for any purpose, provided
+% this copyright notice is retained and prominently displayed, along with
+% a note saying that the original programs are available from our
+% web page.
+% The programs and documents are distributed without any warranty, express or
+% implied.  As the programs were written for research purposes only, they have
+% not been tested to the degree that would be advisable in any important
+% application.  All use of these programs is entirely at the user's own risk.
+
+
+% This program pretrains a deep autoencoder for MNIST dataset
+% You can set the maximum number of epochs for pretraining each layer
+% and you can set the architecture of the multilayer net.
+tic;
+clear all
+close all
+
+% makefacesdata;
+makedata;
+clear all;
+load batchskintraindata
+load batchskintestdata
+
+% maxepoch=20;
+maxepoch=20;
+% maxepoch=1;
+
+fprintf(1,'Converting Raw files into Matlab format \n');
+% converter;
+
+fprintf(1,'Pretraining a deep autoencoder. \n');
+fprintf(1,'The Science paper used 50 epochs. This uses %3i \n', maxepoch);
+
+% makebatches;
+
+[numcases numdims numbatches]=size(batchdata);
+
+numhid=200; numpen=200; numpen2=300;
+
+fprintf(1,'Pretraining Layer 1 with RBM: %d-%d \n',numdims,numhid);%784-500
+restart=1;
+rbm;
+hidrecbiases=hidbiases;
+save mnistvhclassify vishid hidrecbiases visbiases;
+
+fprintf(1,'\nPretraining Layer 2 with RBM: %d-%d \n',numhid,numpen);%500-500
+batchdata=batchposhidprobs;
+numhid=numpen;
+restart=1;
+rbm;
+hidpen=vishid; penrecbiases=hidbiases; hidgenbiases=visbiases;
+save mnisthpclassify hidpen penrecbiases hidgenbiases;
+
+fprintf(1,'\nPretraining Layer 3 with RBM: %d-%d \n',numpen,numpen2);%500-2000
+batchdata=batchposhidprobs;
+numhid=numpen2;
+restart=1;
+rbm;
+hidpen2=vishid; penrecbiases2=hidbiases; hidgenbiases2=visbiases;
+save mnisthp2classify hidpen2 penrecbiases2 hidgenbiases2;
+
+backpropclassify;
+
+train_accuracy = sum(train_output==train_target) / length(train_target)
+test_accuracy = sum(test_output==test_target) / length(test_target)
+
+t=toc
+
+% train_accuracy =
+% 
+%     0.9921
+% 
+% 
+% test_accuracy =
+% 
+%     0.9741
+% 
+% 
+% t =
+% 
+%   2.9624e+003
+
+
+
+
+
